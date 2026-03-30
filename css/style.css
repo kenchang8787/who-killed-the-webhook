@@ -1,0 +1,1520 @@
+/* ==========================================================================
+   WHO KILLED THE WEBHOOK — Main Stylesheet
+   A detective-themed interactive tech sharing experience
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. CSS Custom Properties (Design Tokens)
+   -------------------------------------------------------------------------- */
+:root {
+  /* Backgrounds */
+  --bg-primary: #0f0f1a;
+  --bg-secondary: #1a1a2e;
+  --bg-tertiary: #16213e;
+
+  /* Text */
+  --text-primary: #e0e0e0;
+  --text-secondary: #a0a0b0;
+  --text-accent: #00d4ff;
+
+  /* Accents */
+  --accent-primary: #00d4ff;
+  --accent-secondary: #ffd93d;
+  --accent-danger: #ff6b6b;
+  --accent-success: #4ecdc4;
+
+  /* Borders & Shadows */
+  --border-color: #2a2a4a;
+  --terminal-green: #00ff41;
+  --shadow-glow: 0 0 20px rgba(0, 212, 255, 0.15);
+
+  /* Clue type colours */
+  --clue-log: #4ecdc4;
+  --clue-screenshot: #ffe66d;
+  --clue-code: #a8e6cf;
+  --clue-analysis: #dda0dd;
+  --clue-test: #87ceeb;
+  --clue-dead-end: #ff6b6b;
+  --clue-breakthrough: #ffd93d;
+
+  /* Typography */
+  --font-sans: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono: "Fira Code", "Cascadia Code", "Consolas", monospace;
+}
+
+/* --------------------------------------------------------------------------
+   2. Global Reset & Base Styles
+   -------------------------------------------------------------------------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  font-size: 16px;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.6;
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--accent-primary);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #33dfff;
+}
+
+/* Selection */
+::selection {
+  background: rgba(0, 212, 255, 0.3);
+  color: #fff;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+a {
+  color: var(--accent-primary);
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+a:hover {
+  color: #33dfff;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  outline: none;
+}
+
+/* Focus-visible outlines for accessibility */
+:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+/* --------------------------------------------------------------------------
+   3. Scene System
+   -------------------------------------------------------------------------- */
+.scene {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100vh;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.6s ease, transform 0.6s ease;
+  transform: translateY(8px);
+  overflow-y: auto;
+}
+
+.scene.active {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+  z-index: 10;
+}
+
+/* --------------------------------------------------------------------------
+   4. Scene 1 — Landing
+   -------------------------------------------------------------------------- */
+#scene-landing {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background:
+    radial-gradient(circle at 20% 50%, rgba(0, 212, 255, 0.04) 0%, transparent 50%),
+    radial-gradient(circle at 80% 50%, rgba(255, 217, 61, 0.03) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(0, 0, 0, 0) 0%, var(--bg-primary) 100%),
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 40px,
+      rgba(42, 42, 74, 0.15) 40px,
+      rgba(42, 42, 74, 0.15) 41px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 40px,
+      rgba(42, 42, 74, 0.15) 40px,
+      rgba(42, 42, 74, 0.15) 41px
+    );
+}
+
+.landing-title {
+  font-size: clamp(3rem, 8vw, 6rem);
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+  text-shadow:
+    0 0 10px rgba(0, 212, 255, 0.4),
+    0 0 40px rgba(0, 212, 255, 0.15);
+  margin-bottom: 0.5rem;
+  line-height: 1.1;
+}
+
+.landing-title .highlight {
+  color: var(--accent-primary);
+}
+
+.landing-subtitle {
+  font-family: var(--font-mono);
+  font-size: clamp(0.9rem, 2vw, 1.15rem);
+  color: var(--text-secondary);
+  margin-bottom: 2rem;
+  letter-spacing: 0.05em;
+}
+
+.landing-meta {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  border: 1px dashed var(--border-color);
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  margin-bottom: 3rem;
+  opacity: 0.7;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.landing-decoration {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  filter: drop-shadow(0 0 8px rgba(0, 212, 255, 0.3));
+}
+
+.start-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem 3rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--bg-primary);
+  background: var(--accent-primary);
+  border-radius: 999px;
+  transition: all 0.3s ease;
+  animation: pulse 2.5s ease-in-out infinite;
+}
+
+.start-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 30px rgba(0, 212, 255, 0.5), 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.start-btn:active {
+  transform: translateY(0);
+}
+
+/* --------------------------------------------------------------------------
+   5. Scene 2 — Briefing
+   -------------------------------------------------------------------------- */
+#scene-briefing {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.briefing-container {
+  max-width: 800px;
+  width: 100%;
+}
+
+.case-file {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 2.5rem;
+  position: relative;
+  transform: rotate(-0.3deg);
+  box-shadow:
+    0 4px 30px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.case-file::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+  border-radius: 8px 8px 0 0;
+}
+
+.case-file-header {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--accent-danger);
+  border: 2px solid var(--accent-danger);
+  display: inline-block;
+  padding: 0.3rem 1rem;
+  margin-bottom: 1.5rem;
+  transform: rotate(-1deg);
+  opacity: 0.9;
+}
+
+.briefing-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid rgba(42, 42, 74, 0.5);
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.briefing-item:last-child {
+  border-bottom: none;
+}
+
+.briefing-item .icon {
+  font-size: 1.2rem;
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+}
+
+.briefing-item strong {
+  color: var(--accent-primary);
+}
+
+.briefing-image {
+  margin: 1.5rem 0;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.3);
+}
+
+.briefing-image img {
+  width: 100%;
+  display: block;
+}
+
+.briefing-image .image-caption {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  padding: 0.5rem 0.75rem;
+  background: rgba(0, 0, 0, 0.3);
+  font-family: var(--font-mono);
+}
+
+.proceed-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.85rem 2.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--bg-primary);
+  background: var(--accent-primary);
+  border-radius: 999px;
+  margin-top: 2rem;
+  transition: all 0.3s ease;
+}
+
+.proceed-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 24px rgba(0, 212, 255, 0.4);
+}
+
+/* --------------------------------------------------------------------------
+   6. Scene 3 — Investigation
+   -------------------------------------------------------------------------- */
+#scene-investigation {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.investigation-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1.5rem;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+
+.investigation-header h2 {
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+}
+
+.investigation-header .stats {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.investigation-body {
+  display: grid;
+  grid-template-columns: 300px 1fr 320px;
+  flex: 1;
+  min-height: 0;
+}
+
+/* --- Terminal Panel (left) ------------------------------------------------ */
+.terminal {
+  background: #0a0a0a;
+  border-right: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.terminal-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0.65rem 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.terminal-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.terminal-dot.red { background: #ff5f56; }
+.terminal-dot.yellow { background: #ffbd2e; }
+.terminal-dot.green { background: #27c93f; }
+
+.terminal-title {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  margin-left: 0.5rem;
+  letter-spacing: 0.05em;
+}
+
+.terminal-content {
+  padding: 1rem;
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.terminal-prompt {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.terminal-prompt .prefix {
+  font-family: var(--font-mono);
+  color: var(--terminal-green);
+  font-size: 0.85rem;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.search-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--terminal-green);
+  caret-color: var(--terminal-green);
+  outline: none;
+}
+
+.search-input::placeholder {
+  color: rgba(0, 255, 65, 0.3);
+}
+
+.search-btn {
+  padding: 0.3rem 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  background: var(--accent-primary);
+  color: var(--bg-primary);
+  border-radius: 4px;
+  font-weight: 600;
+  transition: background 0.3s ease;
+}
+
+.search-btn:hover {
+  background: #33dfff;
+}
+
+.terminal-history {
+  list-style: none;
+  margin: 0.75rem 0;
+}
+
+.terminal-history li {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  padding: 0.2rem 0;
+  opacity: 0.5;
+}
+
+.terminal-history li::before {
+  content: "> ";
+  color: var(--terminal-green);
+  opacity: 0.4;
+}
+
+.terminal-output {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  padding: 0.5rem 0;
+  line-height: 1.5;
+}
+
+.terminal-output .match-count {
+  color: var(--accent-primary);
+  font-weight: 600;
+}
+
+.keyword-hints {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: auto;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(42, 42, 74, 0.3);
+}
+
+.keyword-hints .label {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--text-secondary);
+  width: 100%;
+  margin-bottom: 0.2rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.keyword-chip {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  padding: 0.2rem 0.5rem;
+  background: rgba(0, 212, 255, 0.08);
+  color: var(--accent-primary);
+  border: 1px solid rgba(0, 212, 255, 0.2);
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.keyword-chip:hover {
+  background: rgba(0, 212, 255, 0.15);
+  border-color: var(--accent-primary);
+}
+
+/* --- Clue Display (center) ------------------------------------------------ */
+.clue-display {
+  padding: 1.5rem;
+  overflow-y: auto;
+  background: var(--bg-primary);
+}
+
+.no-clue-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  text-align: center;
+  opacity: 0.35;
+}
+
+.no-clue-message .icon {
+  font-size: 3.5rem;
+  margin-bottom: 1rem;
+}
+
+.no-clue-message p {
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+/* --- Clue Card ------------------------------------------------------------ */
+.clue-card {
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  border-left: 4px solid var(--accent-primary);
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.25);
+  margin-bottom: 1.25rem;
+  overflow: hidden;
+  animation: fadeInUp 0.4s ease forwards;
+}
+
+.clue-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid rgba(42, 42, 74, 0.4);
+}
+
+.clue-id {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--accent-primary);
+  flex-shrink: 0;
+}
+
+.clue-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  flex: 1;
+}
+
+.clue-badge {
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--bg-primary);
+  flex-shrink: 0;
+}
+
+.clue-badge.badge-log { background: var(--clue-log); }
+.clue-badge.badge-screenshot { background: var(--clue-screenshot); color: #333; }
+.clue-badge.badge-code { background: var(--clue-code); color: #333; }
+.clue-badge.badge-analysis { background: var(--clue-analysis); color: #333; }
+.clue-badge.badge-test { background: var(--clue-test); color: #333; }
+.clue-badge.badge-dead-end { background: var(--clue-dead-end); }
+.clue-badge.badge-breakthrough { background: var(--clue-breakthrough); color: #333; }
+
+/* Coloured left border by type */
+.clue-card[data-type="log"] { border-left-color: var(--clue-log); }
+.clue-card[data-type="screenshot"] { border-left-color: var(--clue-screenshot); }
+.clue-card[data-type="code"] { border-left-color: var(--clue-code); }
+.clue-card[data-type="analysis"] { border-left-color: var(--clue-analysis); }
+.clue-card[data-type="test"] { border-left-color: var(--clue-test); }
+.clue-card[data-type="dead-end"] { border-left-color: var(--clue-dead-end); }
+.clue-card[data-type="breakthrough"] {
+  border-left-color: var(--clue-breakthrough);
+  animation: fadeInUp 0.4s ease forwards, glow-pulse 3s ease-in-out infinite;
+}
+
+.clue-content {
+  padding: 1.25rem;
+  font-size: 0.92rem;
+  line-height: 1.7;
+  color: var(--text-primary);
+}
+
+.clue-content p {
+  margin-bottom: 0.75rem;
+}
+
+.clue-content p:last-child {
+  margin-bottom: 0;
+}
+
+.clue-content pre {
+  background: #0d0d1a;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 1rem;
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  line-height: 1.5;
+  margin: 0.75rem 0;
+  color: var(--text-primary);
+}
+
+.clue-content code {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  background: rgba(0, 212, 255, 0.08);
+  color: var(--accent-primary);
+  padding: 0.15em 0.4em;
+  border-radius: 3px;
+}
+
+.clue-content pre code {
+  background: none;
+  color: inherit;
+  padding: 0;
+}
+
+.clue-insight {
+  background: rgba(0, 212, 255, 0.05);
+  border-left: 3px solid var(--accent-primary);
+  padding: 0.75rem 1rem;
+  margin: 0.75rem 0;
+  border-radius: 0 6px 6px 0;
+  font-size: 0.88rem;
+  line-height: 1.6;
+}
+
+.clue-insight::before {
+  content: "💡 ";
+}
+
+.clue-references {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  padding: 0.75rem 1.25rem;
+  border-top: 1px solid rgba(42, 42, 74, 0.3);
+}
+
+.clue-ref-tag {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--accent-primary);
+  cursor: pointer;
+  padding: 0.15rem 0.4rem;
+  border-radius: 3px;
+  transition: all 0.3s ease;
+}
+
+.clue-ref-tag::before {
+  content: "@";
+}
+
+.clue-ref-tag:hover {
+  text-decoration: underline;
+  background: rgba(0, 212, 255, 0.08);
+}
+
+.clue-actions {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  border-top: 1px solid rgba(42, 42, 74, 0.3);
+}
+
+.collect-btn {
+  padding: 0.45rem 1rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border-radius: 6px;
+  background: rgba(0, 212, 255, 0.1);
+  color: var(--accent-primary);
+  border: 1px solid rgba(0, 212, 255, 0.25);
+  transition: all 0.3s ease;
+}
+
+.collect-btn:hover {
+  background: rgba(0, 212, 255, 0.2);
+  border-color: var(--accent-primary);
+}
+
+.collect-btn.collected {
+  background: rgba(78, 205, 196, 0.15);
+  color: var(--accent-success);
+  border-color: rgba(78, 205, 196, 0.3);
+}
+
+.clue-image-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 160px;
+  border: 2px dashed var(--border-color);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  text-align: center;
+  margin: 0.75rem 0;
+  padding: 1rem;
+}
+
+/* --- Evidence Board (right) ----------------------------------------------- */
+.evidence-board {
+  background: var(--bg-tertiary);
+  border-left: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.evidence-board-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.evidence-board-header h3 {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--accent-secondary);
+}
+
+.evidence-counter {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.evidence-counter .current {
+  color: var(--accent-primary);
+  font-weight: 700;
+}
+
+.evidence-progress {
+  height: 3px;
+  background: rgba(42, 42, 74, 0.5);
+  overflow: hidden;
+}
+
+.evidence-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+  width: 0%;
+  transition: width 0.5s ease;
+}
+
+.evidence-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.5rem;
+}
+
+.evidence-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+  margin-bottom: 0.25rem;
+}
+
+.evidence-item:hover {
+  background: rgba(0, 212, 255, 0.06);
+}
+
+.evidence-item .ev-id {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--accent-primary);
+  flex-shrink: 0;
+  width: 55px;
+}
+
+.evidence-item .ev-title {
+  font-size: 0.8rem;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.evidence-item .ev-type-icon {
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+.evidence-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  text-align: center;
+  opacity: 0.3;
+  padding: 2rem;
+}
+
+.evidence-empty .icon {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.evidence-empty p {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.solve-btn {
+  margin: 0.75rem;
+  padding: 0.85rem;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--bg-primary);
+  background: linear-gradient(135deg, var(--accent-secondary), #ffb700);
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 20px rgba(255, 217, 61, 0.2);
+  flex-shrink: 0;
+}
+
+.solve-btn:hover {
+  box-shadow: 0 0 30px rgba(255, 217, 61, 0.4);
+  transform: translateY(-1px);
+}
+
+.solve-btn.hidden {
+  display: none;
+}
+
+.solve-btn.pulse {
+  animation: pulse-gold 2s ease-in-out infinite;
+}
+
+/* --------------------------------------------------------------------------
+   7. Scene 4 — Solved
+   -------------------------------------------------------------------------- */
+#scene-solved {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 2rem;
+  overflow-y: auto;
+}
+
+.solved-title {
+  font-size: clamp(2rem, 6vw, 4rem);
+  font-weight: 800;
+  color: var(--accent-secondary);
+  text-shadow:
+    0 0 20px rgba(255, 217, 61, 0.4),
+    0 0 60px rgba(255, 217, 61, 0.15);
+  margin-bottom: 0.5rem;
+}
+
+.solved-subtitle {
+  font-size: 1.15rem;
+  color: var(--text-secondary);
+  margin-bottom: 2.5rem;
+}
+
+.truth-card {
+  max-width: 700px;
+  width: 100%;
+  background: var(--bg-secondary);
+  border: 2px solid var(--accent-secondary);
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: left;
+  box-shadow: 0 0 40px rgba(255, 217, 61, 0.1);
+  margin-bottom: 3rem;
+}
+
+.truth-card h3 {
+  color: var(--accent-secondary);
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.truth-card p {
+  line-height: 1.7;
+  color: var(--text-primary);
+}
+
+/* --- Timeline ------------------------------------------------------------- */
+.timeline {
+  position: relative;
+  max-width: 600px;
+  width: 100%;
+  padding: 1rem 0;
+  text-align: left;
+}
+
+.timeline::before {
+  content: "";
+  position: absolute;
+  left: 15px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--border-color);
+}
+
+.timeline-item {
+  position: relative;
+  padding-left: 48px;
+  margin-bottom: 1.5rem;
+  animation: fadeInUp 0.4s ease both;
+}
+
+.timeline-item:nth-child(1) { animation-delay: 0.1s; }
+.timeline-item:nth-child(2) { animation-delay: 0.2s; }
+.timeline-item:nth-child(3) { animation-delay: 0.3s; }
+.timeline-item:nth-child(4) { animation-delay: 0.4s; }
+.timeline-item:nth-child(5) { animation-delay: 0.5s; }
+.timeline-item:nth-child(6) { animation-delay: 0.6s; }
+.timeline-item:nth-child(7) { animation-delay: 0.7s; }
+.timeline-item:nth-child(8) { animation-delay: 0.8s; }
+
+.timeline-dot {
+  position: absolute;
+  left: 8px;
+  top: 4px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--accent-primary);
+  border: 3px solid var(--bg-primary);
+  z-index: 1;
+}
+
+.timeline-dot.dot-log { background: var(--clue-log); }
+.timeline-dot.dot-screenshot { background: var(--clue-screenshot); }
+.timeline-dot.dot-code { background: var(--clue-code); }
+.timeline-dot.dot-analysis { background: var(--clue-analysis); }
+.timeline-dot.dot-test { background: var(--clue-test); }
+.timeline-dot.dot-dead-end { background: var(--clue-dead-end); }
+.timeline-dot.dot-breakthrough { background: var(--clue-breakthrough); }
+
+.timeline-connector {
+  position: absolute;
+  left: 15px;
+  top: 20px;
+  bottom: -1.5rem;
+  width: 2px;
+  background: var(--border-color);
+}
+
+.timeline-item:last-child .timeline-connector {
+  display: none;
+}
+
+.timeline-content {
+  background: var(--bg-secondary);
+  border-radius: 6px;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border-color);
+}
+
+.timeline-content .tl-id {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--accent-primary);
+}
+
+.timeline-content .tl-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-top: 0.15rem;
+}
+
+.timeline-content .tl-summary {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-top: 0.25rem;
+}
+
+/* --------------------------------------------------------------------------
+   8. Animations
+   -------------------------------------------------------------------------- */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes pulse {
+  0%   { box-shadow: 0 0 10px rgba(0, 212, 255, 0.3); }
+  50%  { box-shadow: 0 0 25px rgba(0, 212, 255, 0.5), 0 0 50px rgba(0, 212, 255, 0.15); }
+  100% { box-shadow: 0 0 10px rgba(0, 212, 255, 0.3); }
+}
+
+@keyframes pulse-gold {
+  0%   { box-shadow: 0 0 10px rgba(255, 217, 61, 0.25); }
+  50%  { box-shadow: 0 0 25px rgba(255, 217, 61, 0.5), 0 0 50px rgba(255, 217, 61, 0.15); }
+  100% { box-shadow: 0 0 10px rgba(255, 217, 61, 0.25); }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0; }
+}
+
+@keyframes typing {
+  from { width: 0; }
+  to   { width: 100%; }
+}
+
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(-10vh) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(110vh) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%      { transform: translateX(-4px); }
+  40%      { transform: translateX(4px); }
+  60%      { transform: translateX(-3px); }
+  80%      { transform: translateX(3px); }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 2px 16px rgba(0, 0, 0, 0.25); }
+  50%      { box-shadow: 0 2px 24px rgba(255, 217, 61, 0.2), 0 0 40px rgba(255, 217, 61, 0.08); }
+}
+
+/* Blinking cursor for terminal */
+.cursor-blink::after {
+  content: "█";
+  animation: blink 1s step-end infinite;
+  color: var(--terminal-green);
+  font-size: 0.85rem;
+}
+
+/* --------------------------------------------------------------------------
+   9. Utility Classes
+   -------------------------------------------------------------------------- */
+.text-accent  { color: var(--accent-primary); }
+.text-danger  { color: var(--accent-danger); }
+.text-success { color: var(--accent-success); }
+.text-gold    { color: var(--accent-secondary); }
+
+.mono { font-family: var(--font-mono); }
+
+.hidden { display: none !important; }
+
+.fade-in {
+  animation: fadeIn 0.5s ease forwards;
+}
+
+.slide-in-right {
+  animation: slideInRight 0.4s ease forwards;
+}
+
+.typewriter {
+  overflow: hidden;
+  white-space: nowrap;
+  border-right: 2px solid var(--terminal-green);
+  animation:
+    typing 1.5s steps(30, end) forwards,
+    blink 0.8s step-end infinite;
+  width: 0;
+}
+
+/* Confetti */
+.confetti-piece {
+  position: fixed;
+  width: 8px;
+  height: 8px;
+  top: -10px;
+  border-radius: 2px;
+  opacity: 0;
+  animation: confetti-fall 3s ease-in forwards;
+  pointer-events: none;
+  z-index: 1000;
+}
+
+.confetti-piece:nth-child(odd) {
+  width: 6px;
+  height: 12px;
+}
+
+/* --------------------------------------------------------------------------
+   9b. JS-Generated Class Aliases & Missing Rules
+   -------------------------------------------------------------------------- */
+
+/* --- Evidence Board Item Classes (used by evidence-board.js) -------------- */
+.evidence-item .evidence-icon {
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+.evidence-item .evidence-id {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--accent-primary);
+  flex-shrink: 0;
+  width: 55px;
+}
+
+.evidence-item .evidence-title {
+  font-size: 0.8rem;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.evidence-item .evidence-remove {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s ease, color 0.2s ease;
+  padding: 2px 4px;
+  flex-shrink: 0;
+}
+
+.evidence-item:hover .evidence-remove {
+  opacity: 1;
+}
+
+.evidence-item .evidence-remove:hover {
+  color: var(--accent-danger);
+}
+
+/* Entrance animation for new evidence items */
+.evidence-item-enter {
+  animation: fadeInUp 0.3s ease forwards;
+}
+
+/* --- Hint Chip (used by app.js) ------------------------------------------ */
+.hint-chip {
+  display: inline-block;
+  padding: 4px 12px;
+  margin: 4px;
+  background: var(--bg-tertiary, #16213e);
+  border: 1px solid var(--border-color, #2a2a4a);
+  border-radius: 16px;
+  color: var(--text-accent, #00d4ff);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.hint-chip:hover {
+  background: var(--accent-primary, #00d4ff);
+  color: var(--bg-primary, #0f0f1a);
+  transform: translateY(-2px);
+}
+
+/* --- Hints Label (used by app.js) ---------------------------------------- */
+.hints-label {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--text-secondary);
+  width: 100%;
+  margin-bottom: 0.2rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+/* --- Terminal History & Output Classes (used by app.js) ------------------- */
+.terminal-history-entry {
+  padding: 2px 0;
+  font-family: 'Courier New', monospace;
+  font-size: 0.85rem;
+  color: var(--text-secondary, #a0a0b0);
+}
+
+.terminal-prompt-mini {
+  color: var(--terminal-green, #00ff41);
+  margin-right: 8px;
+}
+
+.terminal-keyword {
+  color: var(--accent-primary, #00d4ff);
+}
+
+.terminal-output-info {
+  color: var(--text-secondary, #a0a0b0);
+}
+
+.terminal-output-success {
+  color: var(--accent-success, #4ecdc4);
+}
+
+.terminal-output-error {
+  color: var(--accent-danger, #ff6b6b);
+}
+
+/* --- Timeline Classes (used by app.js solved scene) ---------------------- */
+.timeline-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.timeline-clue-id {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--accent-primary);
+}
+
+.timeline-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-top: 0.15rem;
+}
+
+.timeline-insight {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-top: 0.25rem;
+}
+
+.timeline-badge {
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--bg-primary);
+  flex-shrink: 0;
+}
+
+/* --- Dynamic Clue Type Classes (used by app.js) -------------------------- */
+.clue-type-log { border-left-color: var(--clue-log); }
+.clue-type-screenshot { border-left-color: var(--clue-screenshot); }
+.clue-type-code { border-left-color: var(--clue-code); }
+.clue-type-analysis { border-left-color: var(--clue-analysis); }
+.clue-type-test { border-left-color: var(--clue-test); }
+.clue-type-dead-end { border-left-color: var(--clue-dead-end); }
+.clue-type-breakthrough {
+  border-left-color: var(--clue-breakthrough);
+  animation: fadeInUp 0.4s ease forwards, glow-pulse 3s ease-in-out infinite;
+}
+
+/* --- Solve Button Pulse (used by evidence-board.js) ---------------------- */
+.solve-btn.solve-pulse {
+  animation: pulse-gold 2s ease-in-out infinite;
+}
+
+/* --------------------------------------------------------------------------
+   10. Responsive Design
+   -------------------------------------------------------------------------- */
+
+/* Large tablets / small desktops */
+@media (max-width: 1200px) {
+  .investigation-body {
+    grid-template-columns: 280px 1fr;
+    grid-template-rows: 1fr auto;
+  }
+
+  .terminal {
+    grid-column: 1 / 2;
+    grid-row: 1 / 2;
+  }
+
+  .clue-display {
+    grid-column: 2 / 3;
+    grid-row: 1 / 3;
+  }
+
+  .evidence-board {
+    grid-column: 1 / 2;
+    grid-row: 2 / 3;
+    border-left: none;
+    border-top: 1px solid var(--border-color);
+    border-right: 1px solid var(--border-color);
+    max-height: 250px;
+  }
+}
+
+/* Tablets & phones */
+@media (max-width: 768px) {
+  .investigation-body {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr auto;
+  }
+
+  .terminal {
+    border-right: none;
+    border-bottom: 1px solid var(--border-color);
+    max-height: 200px;
+  }
+
+  .clue-display {
+    grid-column: 1;
+    grid-row: 2;
+    min-height: 300px;
+  }
+
+  .evidence-board {
+    grid-column: 1;
+    grid-row: 3;
+    border-left: none;
+    border-top: 1px solid var(--border-color);
+    max-height: 220px;
+  }
+
+  .landing-title {
+    letter-spacing: 0.1em;
+  }
+
+  .case-file {
+    padding: 1.5rem;
+    transform: none;
+  }
+
+  .start-btn,
+  .proceed-btn {
+    padding: 0.85rem 2rem;
+    font-size: 0.95rem;
+  }
+
+  /* Touch-friendly targets */
+  .collect-btn,
+  .keyword-chip,
+  .evidence-item {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+
+  .search-btn {
+    min-height: 44px;
+    padding: 0.5rem 1rem;
+  }
+}
+
+/* Small phones */
+@media (max-width: 480px) {
+  .investigation-header {
+    flex-direction: column;
+    gap: 0.25rem;
+    text-align: center;
+  }
+
+  .clue-card-header {
+    flex-wrap: wrap;
+  }
+
+  .evidence-board-header h3 {
+    font-size: 0.65rem;
+  }
+
+  .landing-meta {
+    padding: 0.5rem 1rem;
+    font-size: 0.7rem;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   11. Miscellaneous
+   -------------------------------------------------------------------------- */
+
+/* Smooth transitions on interactive elements */
+button,
+.keyword-chip,
+.evidence-item,
+.clue-ref-tag,
+a {
+  transition: all 0.3s ease;
+}
+
+/* Print styles */
+@media print {
+  body {
+    background: #fff;
+    color: #000;
+  }
+
+  .scene {
+    position: static;
+    opacity: 1;
+    pointer-events: auto;
+    transform: none;
+    height: auto;
+    overflow: visible;
+    page-break-inside: avoid;
+  }
+
+  .terminal,
+  .evidence-board,
+  .start-btn,
+  .proceed-btn,
+  .solve-btn,
+  .confetti-piece {
+    display: none;
+  }
+
+  .clue-card {
+    box-shadow: none;
+    border: 1px solid #ccc;
+    break-inside: avoid;
+  }
+}

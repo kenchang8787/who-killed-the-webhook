@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Who Killed the Webhook? 🔍</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔍</text></svg>">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Scene 1: Landing -->
+  <div id="scene-landing" class="scene active">
+    <div class="landing-container">
+      <div class="landing-decoration">🕵️</div>
+      <h1 class="landing-title" id="landing-title">WHO KILLED THE WEBHOOK?</h1>
+      <p class="landing-subtitle">一場 Teams 完款通知的離奇死亡事件</p>
+      <div class="landing-meta">
+        <span class="meta-item">📁 CASE #2024-WH-001</span>
+        <span class="meta-item">📅 Status: UNSOLVED</span>
+        <span class="meta-item">🔒 Classification: INTERNAL</span>
+      </div>
+      <button class="start-btn" id="btn-start-case" data-scene="scene-briefing">
+        🔍 開啟案件
+      </button>
+    </div>
+  </div>
+
+  <!-- Scene 2: Briefing -->
+  <div id="scene-briefing" class="scene">
+    <div class="briefing-container">
+      <div class="case-file">
+        <div class="case-file-header">
+          <span class="stamp">CASE FILE</span>
+          <span class="case-file-id">#2024-WH-001</span>
+        </div>
+        <h2 class="case-file-title">案件概述</h2>
+
+        <div class="briefing-items">
+          <div class="briefing-item">
+            <span class="briefing-icon">🚨</span>
+            <div class="briefing-text">
+              <strong>事件：</strong>Teams 完款通知突然停止發送
+            </div>
+          </div>
+          <div class="briefing-item">
+            <span class="briefing-icon">🕐</span>
+            <div class="briefing-text">
+              <strong>發現時間：</strong>由同事回報，通知已靜默數日
+            </div>
+          </div>
+          <div class="briefing-item">
+            <span class="briefing-icon">⚠️</span>
+            <div class="briefing-text">
+              <strong>影響範圍：</strong>正式環境完款通知全部失效
+            </div>
+          </div>
+          <div class="briefing-item">
+            <span class="briefing-icon">✅</span>
+            <div class="briefing-text">
+              <strong>線索：</strong>封測環境通知功能<span class="text-success">正常運作</span>
+            </div>
+          </div>
+          <div class="briefing-item">
+            <span class="briefing-icon">🔗</span>
+            <div class="briefing-text">
+              <strong>涉及系統：</strong>完款服務 (28202) → TBDAPI → Teams Webhook
+            </div>
+          </div>
+        </div>
+
+        <div class="briefing-image">
+          <div class="clue-image-placeholder" data-desc="Teams 頻道截圖 — 顯示最後成功通知和之後的靜默">
+            🖼️ Teams 頻道截圖<br><small>請替換為實際截圖</small>
+          </div>
+        </div>
+      </div>
+
+      <button class="proceed-btn" id="btn-start-investigation" data-scene="scene-investigation">
+        🔎 開始調查
+      </button>
+    </div>
+  </div>
+
+  <!-- Scene 3: Investigation -->
+  <div id="scene-investigation" class="scene">
+    <!-- Top Header Bar -->
+    <div class="investigation-header">
+      <h2 class="investigation-title">🕵️ 調查室</h2>
+      <div class="investigation-stats">
+        <span id="clue-found-count">已發現 0 條線索</span>
+      </div>
+    </div>
+
+    <!-- Three Column Layout -->
+    <div class="investigation-body">
+
+      <!-- LEFT: Search Terminal -->
+      <div class="terminal-panel">
+        <div class="terminal">
+          <div class="terminal-header">
+            <span class="terminal-dot red"></span>
+            <span class="terminal-dot yellow"></span>
+            <span class="terminal-dot green"></span>
+            <span class="terminal-title">investigation-terminal</span>
+          </div>
+          <div class="terminal-body" id="terminal-body">
+            <div class="terminal-welcome">
+              <p>> 歡迎來到調查終端</p>
+              <p>> 輸入關鍵字搜索線索</p>
+              <p>> 例如：Teams通知, 28202, ELK, proxy...</p>
+              <p class="terminal-divider">─────────────────────</p>
+            </div>
+            <div id="terminal-history"></div>
+            <div class="terminal-input-line">
+              <span class="terminal-prompt">🔍 &gt;</span>
+              <input type="text" id="search-input" class="search-input" placeholder="輸入調查關鍵字..." autocomplete="off">
+              <button id="search-btn" class="search-btn">搜索</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Keyword Hints -->
+        <div class="keyword-hints">
+          <p class="hints-label">💡 可能的調查方向：</p>
+          <div class="hints-tags" id="keyword-hints-tags">
+            <!-- Populated by JS with keyword hint chips -->
+          </div>
+        </div>
+      </div>
+
+      <!-- CENTER: Clue Display -->
+      <div class="clue-display-panel">
+        <div id="clue-display" class="clue-display">
+          <div class="no-clue-message" id="no-clue-msg">
+            <div class="no-clue-icon">🔍</div>
+            <p>在左側終端輸入關鍵字</p>
+            <p>開始你的調查之旅</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Evidence Board -->
+      <div class="evidence-panel">
+        <div class="evidence-board" id="evidence-board">
+          <div class="evidence-board-header">
+            <h3>📋 證據板</h3>
+            <span class="evidence-counter" id="evidence-counter">已收集 0 / 15</span>
+          </div>
+          <div class="evidence-progress" id="evidence-progress">
+            <div class="evidence-progress-bar" id="evidence-progress-bar"></div>
+          </div>
+          <div class="evidence-list" id="evidence-list">
+            <div class="evidence-empty" id="evidence-empty">
+              <p>📌 尚未收集任何線索</p>
+              <p><small>搜索並收集線索來破案</small></p>
+            </div>
+          </div>
+          <button class="solve-btn hidden" id="solve-btn" data-scene="scene-solved">
+            🎉 破案！揭曉真相
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Scene 4: Solved -->
+  <div id="scene-solved" class="scene">
+    <div class="solved-container">
+      <div id="confetti-container" class="confetti-container"></div>
+
+      <h1 class="solved-title" id="solved-title">🎉 案件偵破！</h1>
+      <p class="solved-subtitle">恭喜團隊成功找出真兇</p>
+
+      <div class="truth-card">
+        <div class="truth-card-header">
+          <span class="truth-stamp">CASE CLOSED</span>
+        </div>
+        <h3 class="truth-title">真相</h3>
+        <div class="truth-content">
+          <p><strong>兇手：</strong><code>HttpClientHandler</code></p>
+          <p><strong>犯案手法：</strong>未正確將 TLS 版本和憑證驗證設定套用到實際的 HTTP Request</p>
+          <p><strong>破案關鍵：</strong>透過命令列手動測試，發現跳過憑證檢查可成功，進而鎖定 TLS/SSL 層問題。最終發現 HttpClientHandler 的實作缺陷，改用 HttpWebRequest 解決。</p>
+          <p><strong>啟示：</strong></p>
+          <ul>
+            <li>即使程式碼 3 年沒動，環境變化（憑證過期/更新）也可能導致問題</li>
+            <li>封測與正式的差異不只是 config，OS/runtime 行為也可能不同</li>
+            <li>有時候 framework 的抽象層反而會隱藏問題</li>
+            <li>系統性排查法（逐層排除）是解決未知問題的最佳策略</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="timeline-section">
+        <h3 class="timeline-title">🕵️ 調查時間線</h3>
+        <div class="timeline" id="timeline-container">
+          <!-- Populated by JS from collected evidence -->
+        </div>
+      </div>
+
+      <button class="restart-btn" id="btn-restart" data-scene="scene-landing">
+        🔄 重新調查
+      </button>
+    </div>
+  </div>
+
+  <script src="js/clues.js"></script>
+  <script src="js/effects.js"></script>
+  <script src="js/evidence-board.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
