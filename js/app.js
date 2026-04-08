@@ -204,6 +204,37 @@
         });
       }
 
+      // 後續追蹤彈窗
+      var followupBtn = $('followup-btn');
+      var followupOverlay = $('followup-overlay');
+      var followupClose = $('followup-close');
+      var followupFinish = $('followup-finish-btn');
+
+      if (followupBtn && followupOverlay) {
+        followupBtn.addEventListener('click', function () {
+          followupOverlay.classList.remove('hidden');
+        });
+      }
+      if (followupClose && followupOverlay) {
+        followupClose.addEventListener('click', function () {
+          followupOverlay.classList.add('hidden');
+        });
+      }
+      if (followupOverlay) {
+        followupOverlay.addEventListener('click', function (e) {
+          if (e.target === followupOverlay) followupOverlay.classList.add('hidden');
+        });
+      }
+      if (followupFinish) {
+        followupFinish.addEventListener('click', function () {
+          if (followupOverlay) followupOverlay.classList.add('hidden');
+          self._celebrationActive = false;
+          var fw = $('firework-full');
+          if (fw) { fw.classList.remove('active'); fw.innerHTML = ''; }
+          self.switchScene('solved');
+        });
+      }
+
       // 鍵盤快捷鍵
       document.addEventListener('keydown', function (e) {
         // 在 Landing 或 Briefing 時按右鍵前進
@@ -297,7 +328,11 @@
         return;
       }
 
-      var result = window.ClueEngine.searchClues(keyword);
+      // 搜尋時排除已發現的線索
+      var self = this;
+      var result = window.ClueEngine.searchClues(keyword, function (clue) {
+        return !self.discoveredClues.has(clue.id);
+      });
 
       if (!result.clue) {
         // 未找到線索
@@ -305,7 +340,6 @@
           this.addTerminalOutput('❌ 未找到「' + keyword + '」，你是不是要找：' + result.suggestion + '？', 'error');
         } else {
           this.addTerminalOutput('🤔 這條線索似乎不存在... 看看下方的調查方向吧！', 'error');
-          // pulse 高亮 hint chips 區域
           var hintsArea = document.querySelector('.keyword-hints');
           if (hintsArea) {
             hintsArea.classList.add('hints-pulse');
@@ -320,13 +354,6 @@
       }
 
       var clue = result.clue;
-
-      if (this.discoveredClues.has(clue.id)) {
-        this.addTerminalOutput('📎 ' + clue.id + ' 已經發現過了', 'info');
-        // 捲動到已存在的卡片
-        this.scrollToClue(clue.id);
-        return;
-      }
 
       this.addTerminalOutput('✅ 發現新線索：' + clue.title, 'success');
 
@@ -397,13 +424,15 @@
         return;
       }
 
-      var results = window.ClueEngine.autocomplete(value.trim());
+      var self = this;
+      var results = window.ClueEngine.autocomplete(value.trim(), function (clue) {
+        return !self.discoveredClues.has(clue.id);
+      });
       if (results.length === 0) {
         this.hideAutocomplete();
         return;
       }
 
-      var self = this;
       dropdown.innerHTML = '';
       results.forEach(function (r) {
         var item = document.createElement('div');
@@ -616,6 +645,102 @@
 
       // 收集後也刷新提示
       this.refreshKeywordHints();
+
+      // 檢查是否收集滿 3 個 breakthrough
+      this.checkBreakthroughCelebration();
+    },
+
+    /** 檢查是否收齊 3 個突破線索，啟動慶祝 */
+    checkBreakthroughCelebration: function () {
+      if (this._celebrationActive) return;
+      if (!window.EvidenceBoard) return;
+
+      var breakthroughCount = 0;
+      window.EvidenceBoard.collected.forEach(function (clue) {
+        if (clue.type === 'breakthrough') breakthroughCount++;
+      });
+
+      if (breakthroughCount >= 3) {
+        this._celebrationActive = true;
+        this.startFireworks();
+        // 顯示後續追蹤按鈕
+        var followupBtn = $('followup-btn');
+        if (followupBtn) followupBtn.classList.remove('hidden');
+      }
+    },
+
+    /** 啟動持續煙火效果 */
+    startFireworks: function () {
+      var el = $('firework-full');
+      if (!el) return;
+      el.classList.add('active');
+
+      var colors = ['#ff6b6b', '#ffd93d', '#4ecdc4', '#00d4ff', '#dda0dd', '#a8e6cf', '#ff8a5c'];
+
+      function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+      function rand(min, max) { return Math.random() * (max - min) + min; }
+
+      function launchOne(container) {
+        var color = pick(colors);
+        var startX = rand(10, 90);
+        var startY = rand(20, 80);
+        var rise = rand(-100, -220);
+        var duration = rand(0.8, 1.4);
+        var burstCount = Math.floor(rand(6, 12));
+
+        // Rising particle
+        var particle = document.createElement('div');
+        particle.className = 'firework-particle';
+        var size = rand(4, 7);
+        particle.style.cssText =
+          'bottom:' + startY + '%;left:' + startX + '%;' +
+          'width:' + size + 'px;height:' + size + 'px;' +
+          'background:' + color + ';box-shadow:0 0 6px ' + color + ';' +
+          '--fw-rise:' + rise + 'px;--fw-duration:' + duration.toFixed(2) + 's;--fw-spread:0px;';
+        container.appendChild(particle);
+
+        // Burst after rise
+        var burstTime = duration * 350;
+        setTimeout(function () {
+          if (particle.parentNode) particle.remove();
+          for (var i = 0; i < burstCount; i++) {
+            var burst = document.createElement('div');
+            burst.className = 'firework-burst';
+            var bSize = rand(3, 6);
+            var angle = (i / burstCount) * 360;
+            var dist = rand(20, 60);
+            var spreadX = Math.cos(angle * Math.PI / 180) * dist;
+            var spreadY = Math.sin(angle * Math.PI / 180) * dist;
+            burst.style.cssText =
+              'bottom:calc(' + startY + '% + ' + (-rise) + 'px);left:' + startX + '%;' +
+              'width:' + bSize + 'px;height:' + bSize + 'px;' +
+              'color:' + color + ';background:' + color + ';' +
+              'box-shadow:0 0 8px ' + color + ';' +
+              '--fw-duration:' + rand(0.5, 1.0).toFixed(2) + 's;' +
+              '--fw-spread:' + spreadX + 'px;margin-top:' + spreadY + 'px;';
+            container.appendChild(burst);
+            (function (el) { setTimeout(function () { if (el.parentNode) el.remove(); }, 1200); })(burst);
+          }
+        }, burstTime);
+
+        // Cleanup rising particle
+        setTimeout(function () { if (particle.parentNode) particle.remove(); }, duration * 1000 + 200);
+      }
+
+      // 持續發射 — 全畫面
+      var self = this;
+      function loop() {
+        if (!self._celebrationActive) return;
+        launchOne(el);
+        launchOne(el);
+        setTimeout(function () {
+          if (!self._celebrationActive) return;
+          launchOne(el);
+          launchOne(el);
+        }, rand(150, 300));
+        setTimeout(loop, rand(250, 500));
+      }
+      loop();
     },
 
     /* =====================
@@ -727,12 +852,6 @@
      * ===================== */
 
     playSolvedAnimation: async function () {
-      // 灑花特效
-      var confettiContainer = $('confetti-container');
-      if (confettiContainer && window.Effects) {
-        window.Effects.confetti(confettiContainer, 6000);
-      }
-
       // 標題打字效果
       var title = $('solved-title');
       if (title && window.Effects) {
@@ -746,6 +865,75 @@
 
       // 建立時間軸
       this.buildTimeline();
+
+      // 持續煙火
+      this._solvedCelebration = true;
+      this.startSolvedFireworks();
+    },
+
+    /** 感謝聆聽頁持續煙火 */
+    startSolvedFireworks: function () {
+      var el = $('firework-solved');
+      if (!el) return;
+
+      var colors = ['#ff6b6b', '#ffd93d', '#4ecdc4', '#00d4ff', '#dda0dd', '#a8e6cf', '#ff8a5c'];
+      function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+      function rand(min, max) { return Math.random() * (max - min) + min; }
+
+      function launchOne() {
+        var color = pick(colors);
+        var startX = rand(5, 95);
+        var startY = rand(20, 80);
+        var rise = rand(-100, -220);
+        var duration = rand(0.8, 1.4);
+        var burstCount = Math.floor(rand(6, 12));
+
+        var particle = document.createElement('div');
+        particle.className = 'firework-particle';
+        var size = rand(4, 7);
+        particle.style.cssText =
+          'bottom:' + startY + '%;left:' + startX + '%;' +
+          'width:' + size + 'px;height:' + size + 'px;' +
+          'background:' + color + ';box-shadow:0 0 6px ' + color + ';' +
+          '--fw-rise:' + rise + 'px;--fw-duration:' + duration.toFixed(2) + 's;--fw-spread:0px;';
+        el.appendChild(particle);
+
+        var burstTime = duration * 350;
+        setTimeout(function () {
+          if (particle.parentNode) particle.remove();
+          for (var i = 0; i < burstCount; i++) {
+            var burst = document.createElement('div');
+            burst.className = 'firework-burst';
+            var bSize = rand(3, 6);
+            var angle = (i / burstCount) * 360;
+            var dist = rand(20, 60);
+            var spreadX = Math.cos(angle * Math.PI / 180) * dist;
+            var spreadY = Math.sin(angle * Math.PI / 180) * dist;
+            burst.style.cssText =
+              'bottom:calc(' + startY + '% + ' + (-rise) + 'px);left:' + startX + '%;' +
+              'width:' + bSize + 'px;height:' + bSize + 'px;' +
+              'color:' + color + ';background:' + color + ';' +
+              'box-shadow:0 0 8px ' + color + ';' +
+              '--fw-duration:' + rand(0.5, 1.0).toFixed(2) + 's;' +
+              '--fw-spread:' + spreadX + 'px;margin-top:' + spreadY + 'px;';
+            el.appendChild(burst);
+            (function (b) { setTimeout(function () { if (b.parentNode) b.remove(); }, 1200); })(burst);
+          }
+        }, burstTime);
+        setTimeout(function () { if (particle.parentNode) particle.remove(); }, duration * 1000 + 200);
+      }
+
+      var self = this;
+      function loop() {
+        if (!self._solvedCelebration) return;
+        launchOne(); launchOne();
+        setTimeout(function () {
+          if (!self._solvedCelebration) return;
+          launchOne(); launchOne();
+        }, rand(150, 300));
+        setTimeout(loop, rand(250, 500));
+      }
+      loop();
     },
 
     /** 根據已收集線索建立破案時間軸 */
@@ -802,6 +990,13 @@
       // 清除狀態
       this.discoveredClues.clear();
       this.searchHistory = [];
+      this._celebrationActive = false;
+      var fwFull = $('firework-full');
+      if (fwFull) { fwFull.classList.remove('active'); fwFull.innerHTML = ''; }
+      var followupBtn = $('followup-btn');
+      if (followupBtn) followupBtn.classList.add('hidden');
+      var followupOverlay = $('followup-overlay');
+      if (followupOverlay) followupOverlay.classList.add('hidden');
 
       if (window.EvidenceBoard) {
         window.EvidenceBoard.reset();

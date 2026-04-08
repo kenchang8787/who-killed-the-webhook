@@ -63,20 +63,25 @@ const CLUES = [
       <div class="clue-image-group"><div class="clue-image-item"><img src="img/clue/TBDAPI_代碼_1.png" alt="代碼 1"><div class="clue-image-caption">SendMessage()</div></div><div class="clue-image-item"><img src="img/clue/TBDAPI_代碼_2.png" alt="代碼 2"><div class="clue-image-caption">SendMessage(WebhookMessage)</div></div><div class="clue-image-item"><img src="img/clue/TBDAPI_代碼_3.png" alt="代碼 3"><div class="clue-image-caption">PostRawJsonDataByProxy()</div></div></div>`,
     insight: 'HttpClientHandler + WebProxy 經 message-proxy 打外網', references: ['CLUE-08'], order: 9 },
 
-  { id: 'CLUE-10', keywords: ['正式Postman'], aliases: ['Postman', '驗證', '測試', 'TBDAPI', '正式', '封測'], hintKeyword: '正式Postman', hintQuestion: 'Postman 打正式環境', title: 'Postman 打正式環境', type: 'test', icon: '🧪',
-    content: `<p>Postman 對 TBDAPI 發 request。封測 <code>Success: true, 執行成功</code>；正式 <code>Success: false, "An error occurred while sending the request."</code>。</p>
-      <div class="clue-image-compare"><div class="compare-col"><div class="compare-label compare-success">封測 ✅</div><div class="clue-image-item"><img src="img/clue/TBDAPI_封測_Postman_Origin.png" alt="封測 Postman"></div></div><div class="compare-col"><div class="compare-label compare-fail">正式 ❌</div><div class="clue-image-item"><img src="img/clue/TBDAPI_正式_Postman_Origin.png" alt="正式 Postman"></div></div></div>`,
-    insight: '封測成功、正式 "An error occurred..."', references: ['CLUE-09', 'CLUE-02'], order: 10 },
+  { id: 'CLUE-10', keywords: ['封測Postman2'], aliases: ['Postman', '封測', 'TBDAPI', '測試', '驗證'], hintKeyword: '封測Postman2', hintQuestion: '封測 Postman 再驗證', title: '封測 Postman 再驗證', type: 'test', icon: '🧪',
+    content: `<p>追完 TBDAPI 代碼後，再次用 Postman 打封測環境的 TBDAPI。回傳 <code>Success: true, 執行成功</code>。<strong>封測依然正常</strong>。</p>
+      <div class="clue-image-item clue-image-single"><img src="img/clue/TBDAPI_封測_Postman_Origin.png" alt="封測 Postman"><div class="clue-image-caption">封測 — Success: true</div></div>`,
+    insight: '封測 Postman 依然成功', references: ['CLUE-09', 'CLUE-02'], order: 10 },
+
+  { id: 'CLUE-10B', keywords: ['正式Postman'], aliases: ['Postman', '正式', 'TBDAPI', '測試', '驗證'], hintKeyword: '正式Postman', hintQuestion: '正式 Postman 測試', title: '正式 Postman 測試', type: 'test', icon: '🧪',
+    content: `<p>Postman 打正式環境的 TBDAPI。回傳 <code>Success: false, "An error occurred while sending the request."</code>。<strong>正式失敗</strong>。</p>
+      <div class="clue-image-item clue-image-single"><img src="img/clue/TBDAPI_正式_Postman_Origin.png" alt="正式 Postman"><div class="clue-image-caption">正式 — An error occurred...</div></div>`,
+    insight: '正式回傳 "An error occurred while sending the request."', references: ['CLUE-10'], order: 10.5 },
 
   { id: 'CLUE-11', keywords: ['ProxyURL', 'proxy設定'], aliases: ['config', '設定', 'proxy', 'TBDAPI', '封測', '正式'], hintKeyword: 'ProxyURL', hintQuestion: '比對 ProxyURL 設定', title: '比對 ProxyURL 設定', type: 'dead-end', icon: '❌',
     content: `<p>封測與正式的 TBDAPI ProxyURL 設定：<strong>完全相同</strong>，都指向同一個 proxy 位址。</p>
       <div class="clue-image-compare"><div class="compare-col"><div class="compare-label">封測 ProxyURL</div><div class="clue-image-item"><img src="img/clue/TBDAPI_封測_ProxyURL_Config.png" alt="封測 ProxyURL"></div></div><div class="compare-col"><div class="compare-label">正式 ProxyURL</div><div class="clue-image-item"><img src="img/clue/TBDAPI_正式_ProxyURL_Config.png" alt="正式 ProxyURL"></div></div></div>`,
-    insight: '封測/正式 ProxyURL 完全相同', references: ['CLUE-10'], order: 11 },
+    insight: '封測/正式 ProxyURL 完全相同', references: ['CLUE-10B'], order: 11 },
 
   { id: 'CLUE-12', keywords: ['GPT', 'ChatGPT'], aliases: ['搜尋', '原因', 'ACL', 'DNS', 'TLS', '錯誤', 'error', '嫌疑', '方向'], hintKeyword: 'GPT', hintQuestion: '問 ChatGPT 錯誤訊息', title: '問 ChatGPT 錯誤訊息', type: 'analysis', icon: '🔬',
     content: `<p>用 ChatGPT 查詢 <code>"An error occurred while sending the request"</code>，歸納三個方向：</p>
       <ol><li><strong>ACL 改變</strong> — 網路層被擋</li><li><strong>DNS 解析問題</strong> — 解析到錯的 IP</li><li><strong>TLS/SSL 握手失敗</strong> — 憑證或加密協定問題</li></ol>`,
-    insight: 'ChatGPT 歸納：ACL / DNS / TLS', references: ['CLUE-10'], order: 12 },
+    insight: 'ChatGPT 歸納：ACL / DNS / TLS', references: ['CLUE-10B'], order: 12 },
 
   { id: 'CLUE-13', keywords: ['TBDAPIIP', 'TBDAPI機器'], aliases: ['IP', '機器', 'TBDAPI', '封測', '正式', '19.204', '19.25', '網段'], hintKeyword: 'TBDAPIIP', hintQuestion: 'TBDAPI 機器 IP？', title: 'TBDAPI 機器 IP？', type: 'analysis', icon: '🔬',
     content: `<p>TBDAPI 封測與正式的機器 IP。封測在 <strong>19.204</strong> 網段，正式在 <strong>19.25</strong> 網段。</p>
@@ -194,21 +199,23 @@ function getMatchPool(clue) {
 // ============================================================
 // 搜尋引擎
 // ============================================================
-function searchClues(keyword) {
+function searchClues(keyword, filter) {
   if (!keyword || typeof keyword !== 'string') return { clue: null, suggestion: null };
   var term = keyword.replace(/\s+/g, ' ').trim().toLowerCase();
   if (term === '') return { clue: null, suggestion: null };
 
-  if (KEYWORD_INDEX[term]) return { clue: KEYWORD_INDEX[term], suggestion: null };
+  var candidate = KEYWORD_INDEX[term];
+  if (candidate && (!filter || filter(candidate))) return { clue: candidate, suggestion: null };
 
   var idMatch = term.toUpperCase();
-  var byId = CLUES.find(function (c) { return c.id === idMatch; });
+  var byId = CLUES.find(function (c) { return c.id === idMatch && (!filter || filter(c)); });
   if (byId) return { clue: byId, suggestion: null };
 
   var tokens = tokenize(term);
   if (tokens.length > 0) {
     var bestClue = null, bestScore = 0;
     CLUES.forEach(function (clue) {
+      if (filter && !filter(clue)) return;
       var pool = getMatchPool(clue), matched = 0;
       tokens.forEach(function (token) {
         if (pool.some(function (p) { return p.indexOf(token) !== -1 || token.indexOf(p) !== -1; })) matched++;
@@ -231,7 +238,7 @@ function searchClues(keyword) {
   return { clue: null, suggestion: suggestion };
 }
 
-function autocomplete(input) {
+function autocomplete(input, filter) {
   if (!input || input.length < 1) return [];
   var p = input.replace(/\s+/g, ' ').trim().toLowerCase();
   if (!p) return [];
@@ -240,6 +247,7 @@ function autocomplete(input) {
   if (tokens.length === 0) tokens = [p];
 
   CLUES.forEach(function (clue) {
+    if (filter && !filter(clue)) return;
     var pool = getMatchPool(clue), matched = 0;
     tokens.forEach(function (token) {
       if (pool.some(function (pw) { return pw.indexOf(token) !== -1 || token.indexOf(pw) !== -1; })) matched++;

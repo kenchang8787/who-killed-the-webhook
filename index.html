@@ -100,6 +100,7 @@
 
     <!-- Three Column Layout -->
     <div class="investigation-body">
+      <div class="firework-container firework-full" id="firework-full"></div>
 
       <!-- LEFT: Search Terminal -->
       <div class="terminal-panel">
@@ -158,7 +159,7 @@
         <div class="evidence-board" id="evidence-board">
           <div class="evidence-board-header">
             <h3>📋 證據板</h3>
-            <span class="evidence-counter" id="evidence-counter">已收集 0 / 28</span>
+            <span class="evidence-counter" id="evidence-counter">已收集 0 / 29</span>
           </div>
           <div class="evidence-progress" id="evidence-progress">
             <div class="evidence-progress-bar" id="evidence-progress-bar"></div>
@@ -175,46 +176,101 @@
         </div>
       </div>
 
+      <!-- 後續追蹤按鈕（收集 3 個 breakthrough 後顯示） -->
+      <button class="followup-btn hidden" id="followup-btn">📋 後續追蹤</button>
+    </div>
+  </div>
+
+  <!-- 後續追蹤彈窗 -->
+  <div class="followup-overlay hidden" id="followup-overlay">
+    <div class="followup-modal">
+      <button class="followup-close" id="followup-close">&times;</button>
+      <h2 class="followup-title">📋 後續追蹤：為什麼會壞？</h2>
+
+      <div class="followup-body">
+        <div class="followup-section">
+          <h3>1. Microsoft 退役 Incoming Webhook</h3>
+          <p>Microsoft 公告將退役舊版 <strong>Office 365 連接器</strong>（含 Incoming Webhook），要求遷移至 <strong>Teams Workflows</strong>（Power Automate）。舊版 Webhook URL 將於 <strong>2026 年 4 月 30 日</strong>完全停止運作。</p>
+          <div class="clue-image-item"><img src="img/clue/後續調查_1_Webhook更新.png" alt="Webhook 更新公告"></div>
+        </div>
+
+        <div class="followup-section">
+          <h3>2. TLS 1.0 / 1.1 全面停止支援</h3>
+          <p>Microsoft 已全面停止支援 TLS 1.0 與 TLS 1.1。舊版伺服器（如舊 .NET Framework）預設使用 TLS 1.0/1.1 時，Teams Webhook 伺服器會<strong>拒絕握手</strong>。所有 Microsoft 365 服務必須使用 <strong>TLS 1.2 或更高</strong>。</p>
+          <div class="clue-image-item"><img src="img/clue/後續調查_2_TLS.png" alt="TLS 停止支援"></div>
+        </div>
+
+        <div class="followup-section">
+          <h3>3. 根憑證遷移：Baltimore → DigiCert</h3>
+          <p>Microsoft 正在將根憑證從 <strong>Baltimore CyberTrust Root</strong> 遷移到 <strong>DigiCert Global Root G2</strong>（舊憑證 2025 年過期）。如果伺服器的 Trust Store 太舊、沒有新的 DigiCert 根憑證，就會<strong>無法信任</strong> Teams Webhook 的新憑證。</p>
+          <div class="clue-image-item"><img src="img/clue/後續調查_3_Cert.png" alt="憑證遷移"></div>
+        </div>
+
+        <div class="followup-divider"></div>
+
+        <div class="followup-section">
+          <h3>💡 小知識</h3>
+        </div>
+
+        <div class="followup-section">
+          <h4>TLS 握手與 Proxy 的關係</h4>
+          <p>TLS 握手等於「安檢」：傳送 HTTP 資料前，雙方先對齊加密規則。微軟目前不收舊規格，若發送端還在用 TLS 1.0/1.1，握手會直接談崩。根憑證的「信任鏈」也換了發證機關（Root CA），如果伺服器清單太舊、不認得新的 DigiCert，就不會信任這次連線。</p>
+          <div class="clue-image-item"><img src="img/clue/後續追蹤_小知識_HTTP_HandShake.png" alt="TLS 握手"></div>
+        </div>
+
+        <div class="followup-section">
+          <h4>Proxy 代理類型</h4>
+          <p>正向代理（Forward）隱藏客戶端 IP，常見於公司內網翻牆。HTTPS 代理透過 HTTP Tunneling（CONNECT 方法）建立隧道，Proxy 只負責把封包丟過去，不解密內部 TLS 內容——所以 Webhook 握手失敗不是 Proxy 的錯，而是兩端點談不攏。</p>
+          <div class="clue-image-item"><img src="img/clue/後續追蹤_小知識_Proxy_1.png" alt="Proxy 類型"></div>
+          <div class="clue-image-item"><img src="img/clue/後續追蹤_小知識_Proxy_2.png" alt="Proxy 補充"></div>
+        </div>
+      </div>
+
+      <button class="followup-finish-btn" id="followup-finish-btn">🎤 感謝聆聽</button>
     </div>
   </div>
 
   <!-- Scene 4: Solved -->
   <div id="scene-solved" class="scene">
+    <div class="firework-container firework-full active" id="firework-solved"></div>
     <div class="solved-container">
-      <div id="confetti-container" class="confetti-container"></div>
 
       <h1 class="solved-title" id="solved-title">🎉 案件偵破！</h1>
       <p class="solved-subtitle">恭喜團隊成功找出真兇</p>
 
-      <div class="truth-card">
-        <div class="truth-card-header">
-          <span class="truth-stamp">CASE CLOSED</span>
+      <div class="solved-layout">
+        <!-- 左側：真相卡片 -->
+        <div class="solved-left">
+          <div class="truth-card">
+            <div class="truth-card-header">
+              <span class="truth-stamp">CASE CLOSED</span>
+            </div>
+            <h3 class="truth-title">真相</h3>
+            <div class="truth-content">
+              <p><strong>兇手：</strong><code>HttpClientHandler</code></p>
+              <p><strong>犯案手法：</strong>未正確將 TLS 版本和憑證驗證設定套用到實際的 HTTP Request</p>
+              <p><strong>破案關鍵：</strong>透過命令列手動測試，發現跳過憑證檢查可成功，進而鎖定 TLS/SSL 層問題。最終發現 HttpClientHandler 的實作缺陷，改用 HttpWebRequest 解決。</p>
+              <p><strong>啟示：</strong></p>
+              <ul>
+                <li>即使程式碼 3 年沒動，環境變化（憑證過期/更新）也可能導致問題</li>
+                <li>封測與正式的差異不只是 config，OS/runtime 行為也可能不同</li>
+                <li>有時候 framework 的抽象層反而會隱藏問題</li>
+                <li>系統性排查法（逐層排除）是解決未知問題的最佳策略</li>
+              </ul>
+            </div>
+          </div>
         </div>
-        <h3 class="truth-title">真相</h3>
-        <div class="truth-content">
-          <p><strong>兇手：</strong><code>HttpClientHandler</code></p>
-          <p><strong>犯案手法：</strong>未正確將 TLS 版本和憑證驗證設定套用到實際的 HTTP Request</p>
-          <p><strong>破案關鍵：</strong>透過命令列手動測試，發現跳過憑證檢查可成功，進而鎖定 TLS/SSL 層問題。最終發現 HttpClientHandler 的實作缺陷，改用 HttpWebRequest 解決。</p>
-          <p><strong>啟示：</strong></p>
-          <ul>
-            <li>即使程式碼 3 年沒動，環境變化（憑證過期/更新）也可能導致問題</li>
-            <li>封測與正式的差異不只是 config，OS/runtime 行為也可能不同</li>
-            <li>有時候 framework 的抽象層反而會隱藏問題</li>
-            <li>系統性排查法（逐層排除）是解決未知問題的最佳策略</li>
-          </ul>
+
+        <!-- 右側：調查時間線 -->
+        <div class="solved-right">
+          <div class="timeline-section">
+            <h3 class="timeline-title">🕵️ 調查時間線</h3>
+            <div class="timeline" id="timeline-container">
+              <!-- Populated by JS from collected evidence -->
+            </div>
+          </div>
         </div>
       </div>
-
-      <div class="timeline-section">
-        <h3 class="timeline-title">🕵️ 調查時間線</h3>
-        <div class="timeline" id="timeline-container">
-          <!-- Populated by JS from collected evidence -->
-        </div>
-      </div>
-
-      <button class="restart-btn" id="btn-restart" data-scene="scene-landing">
-        🔄 重新調查
-      </button>
     </div>
   </div>
 

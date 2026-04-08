@@ -453,7 +453,7 @@
      * @param {number}      duration      飛行時長 (ms)
      * @returns {Promise<void>}
      */
-    flyTo(sourceElement, targetElement, duration = 600) {
+    flyTo(sourceElement, targetElement, duration = 800) {
       if (!isElement(sourceElement) || !isElement(targetElement)) {
         return Promise.resolve();
       }
@@ -461,50 +461,64 @@
       const sourceRect = sourceElement.getBoundingClientRect();
       const targetRect = targetElement.getBoundingClientRect();
 
-      // 建立來源元素的副本
-      const clone = sourceElement.cloneNode(true);
-      Object.assign(clone.style, {
+      // 建立一個小光點而非整張卡片的複製
+      const orb = document.createElement('div');
+      const startX = sourceRect.left + sourceRect.width / 2;
+      const startY = sourceRect.top + sourceRect.height / 2;
+      const endX = targetRect.left + targetRect.width / 2;
+      const endY = targetRect.top + targetRect.height / 2;
+
+      // 取線索卡片的左邊框顏色作為光點顏色
+      const borderColor = getComputedStyle(sourceElement).borderLeftColor || '#00d4ff';
+
+      Object.assign(orb.style, {
         position: 'fixed',
-        left: `${sourceRect.left}px`,
-        top: `${sourceRect.top}px`,
-        width: `${sourceRect.width}px`,
-        height: `${sourceRect.height}px`,
-        margin: '0',
+        left: `${startX}px`,
+        top: `${startY}px`,
+        width: '12px',
+        height: '12px',
+        borderRadius: '50%',
+        background: borderColor,
+        boxShadow: `0 0 16px 4px ${borderColor}, 0 0 40px 8px ${borderColor}`,
         zIndex: '10000',
         pointerEvents: 'none',
-        transition: `all ${duration}ms ease-in-out`
+        transform: 'translate(-50%, -50%) scale(1)',
+        opacity: '1',
+        transition: `all ${duration}ms cubic-bezier(0.4, 0, 0.2, 1)`
       });
-      document.body.appendChild(clone);
+      document.body.appendChild(orb);
 
-      // 強制瀏覽器計算佈局後再開始動畫
-      clone.offsetHeight; // eslint-disable-line no-unused-expressions
+      // 來源卡片 pulse 一下
+      sourceElement.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+      sourceElement.style.transform = 'scale(0.98)';
+      sourceElement.style.opacity = '0.7';
+      setTimeout(() => {
+        sourceElement.style.transform = '';
+        sourceElement.style.opacity = '';
+      }, 400);
 
-      // 計算目標中心與縮放比
-      const scaleX = targetRect.width / sourceRect.width;
-      const scaleY = targetRect.height / sourceRect.height;
-      const scale = Math.min(scaleX, scaleY, 0.4);
+      // 強制 reflow
+      orb.offsetHeight;
 
-      Object.assign(clone.style, {
-        left: `${targetRect.left + targetRect.width / 2 - sourceRect.width / 2}px`,
-        top: `${targetRect.top + targetRect.height / 2 - sourceRect.height / 2}px`,
-        transform: `scale(${scale})`,
-        opacity: '0.3'
+      // 飛往目標
+      Object.assign(orb.style, {
+        left: `${endX}px`,
+        top: `${endY}px`,
+        transform: 'translate(-50%, -50%) scale(0.5)',
+        opacity: '0.6'
       });
 
       return new Promise(resolve => {
-        clone.addEventListener('transitionend', function handler(e) {
-          if (e.propertyName === 'left' || e.propertyName === 'top') {
-            clone.removeEventListener('transitionend', handler);
-            if (clone.parentNode) clone.parentNode.removeChild(clone);
-            resolve();
-          }
-        });
-
-        // 安全回退：即使 transitionend 未觸發也確保清理
         setTimeout(() => {
-          if (clone.parentNode) clone.parentNode.removeChild(clone);
+          // 到達時閃一下目標
+          if (isElement(targetElement)) {
+            targetElement.style.transition = 'box-shadow 0.3s ease';
+            targetElement.style.boxShadow = `0 0 20px 4px ${borderColor}`;
+            setTimeout(() => { targetElement.style.boxShadow = ''; }, 400);
+          }
+          if (orb.parentNode) orb.remove();
           resolve();
-        }, duration + 100);
+        }, duration);
       });
     }
   };
