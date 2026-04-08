@@ -36,42 +36,48 @@
         </div>
         <h2 class="case-file-title">案件概述</h2>
 
-        <div class="briefing-items">
-          <div class="briefing-item">
-            <span class="briefing-icon">🚨</span>
-            <div class="briefing-text">
-              <strong>事件：</strong>Teams 完款通知突然停止發送
+        <div class="briefing-layout">
+          <!-- 左側：案件敘述 -->
+          <div class="briefing-left">
+            <div class="briefing-items">
+              <div class="briefing-item">
+                <span class="briefing-icon">🚨</span>
+                <div class="briefing-text">
+                  <strong>事件：</strong>Teams 完款通知突然停止發送，業務團隊哀鴻遍野
+                </div>
+              </div>
+              <div class="briefing-item">
+                <span class="briefing-icon">🕐</span>
+                <div class="briefing-text">
+                  <strong>發現時間：</strong>3/25（三）由業務同事回報，完款通知消失了
+                </div>
+              </div>
+              <div class="briefing-item">
+                <span class="briefing-icon">⚠️</span>
+                <div class="briefing-text">
+                  <strong>影響範圍：</strong>正式環境完款通知全部失效，業務無法即時追蹤款項
+                </div>
+              </div>
             </div>
           </div>
-          <div class="briefing-item">
-            <span class="briefing-icon">🕐</span>
-            <div class="briefing-text">
-              <strong>發現時間：</strong>由同事回報，通知已靜默數日
-            </div>
-          </div>
-          <div class="briefing-item">
-            <span class="briefing-icon">⚠️</span>
-            <div class="briefing-text">
-              <strong>影響範圍：</strong>正式環境完款通知全部失效
-            </div>
-          </div>
-          <div class="briefing-item">
-            <span class="briefing-icon">✅</span>
-            <div class="briefing-text">
-              <strong>線索：</strong>封測環境通知功能<span class="text-success">正常運作</span>
-            </div>
-          </div>
-          <div class="briefing-item">
-            <span class="briefing-icon">🔗</span>
-            <div class="briefing-text">
-              <strong>涉及系統：</strong>完款服務 (28202) → TBDAPI → Teams Webhook
-            </div>
-          </div>
-        </div>
 
-        <div class="briefing-image">
-          <div class="clue-image-placeholder" data-desc="Teams 頻道截圖 — 顯示最後成功通知和之後的靜默">
-            🖼️ Teams 頻道截圖<br><small>請替換為實際截圖</small>
+          <!-- 右側：案發現場圖片 -->
+          <div class="briefing-right">
+            <h3 class="briefing-gallery-title">📸 案發現場目擊</h3>
+            <div class="briefing-gallery-stack">
+              <div class="briefing-image">
+                <img src="img/在哭_業務1.png" alt="業務崩潰現場 1">
+                <div class="image-caption">「我的通知呢？！」—— 業務同事 A</div>
+              </div>
+              <div class="briefing-image">
+                <img src="img/在哭_業務2.png" alt="業務崩潰現場 2">
+                <div class="image-caption">「完款了但沒通知...」—— 業務同事 B</div>
+              </div>
+              <div class="briefing-image">
+                <img src="img/在哭_老闆.png" alt="老闆也崩潰了">
+                <div class="image-caption">「這個問題到底什麼時候能修好？」—— 老闆</div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -108,13 +114,20 @@
             <div class="terminal-welcome">
               <p>> 歡迎來到調查終端</p>
               <p>> 輸入關鍵字搜索線索</p>
-              <p>> 例如：Teams通知, 28202, ELK, proxy...</p>
               <p class="terminal-divider">─────────────────────</p>
             </div>
-            <div id="terminal-history"></div>
+            <div class="terminal-history-section collapsed" id="terminal-history-section">
+              <div class="terminal-history-toggle" id="terminal-history-toggle">
+                <span class="toggle-arrow">▶</span> 調查歷史 <span class="history-count" id="history-count">(0)</span>
+              </div>
+              <div class="terminal-history-content" id="terminal-history"></div>
+            </div>
             <div class="terminal-input-line">
               <span class="terminal-prompt">🔍 &gt;</span>
-              <input type="text" id="search-input" class="search-input" placeholder="輸入調查關鍵字..." autocomplete="off">
+              <div class="search-input-wrapper">
+                <input type="text" id="search-input" class="search-input" placeholder="輸入調查關鍵字..." autocomplete="off">
+                <div class="autocomplete-dropdown hidden" id="autocomplete-dropdown"></div>
+              </div>
               <button id="search-btn" class="search-btn">搜索</button>
             </div>
           </div>
@@ -122,7 +135,7 @@
 
         <!-- Keyword Hints -->
         <div class="keyword-hints">
-          <p class="hints-label">💡 可能的調查方向：</p>
+          <p class="hints-label">💡 調查方向（隨進度解鎖）：</p>
           <div class="hints-tags" id="keyword-hints-tags">
             <!-- Populated by JS with keyword hint chips -->
           </div>
@@ -145,7 +158,7 @@
         <div class="evidence-board" id="evidence-board">
           <div class="evidence-board-header">
             <h3>📋 證據板</h3>
-            <span class="evidence-counter" id="evidence-counter">已收集 0 / 15</span>
+            <span class="evidence-counter" id="evidence-counter">已收集 0 / 28</span>
           </div>
           <div class="evidence-progress" id="evidence-progress">
             <div class="evidence-progress-bar" id="evidence-progress-bar"></div>
@@ -205,9 +218,16 @@
     </div>
   </div>
 
+  <!-- Lightbox -->
+  <div class="lightbox-overlay" id="lightbox-overlay">
+    <button class="lightbox-close" id="lightbox-close">&times;</button>
+    <img id="lightbox-img" src="" alt="">
+  </div>
+
   <script src="js/clues.js"></script>
   <script src="js/effects.js"></script>
   <script src="js/evidence-board.js"></script>
   <script src="js/app.js"></script>
+  <script src="js/lightbox.js"></script>
 </body>
 </html>

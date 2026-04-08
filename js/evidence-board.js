@@ -225,7 +225,7 @@ window.EvidenceBoard = {
   _updateSolveButton() {
     if (!this._solveBtnEl) return;
 
-    var threshold = 12;
+    var threshold = Math.ceil(this.totalClues * 0.8);
 
     if (this.collected.size >= threshold) {
       this._solveBtnEl.style.display = '';

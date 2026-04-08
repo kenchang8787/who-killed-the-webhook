@@ -12,11 +12,7 @@
 
   const SCENE_IDS = ['landing', 'briefing', 'investigation', 'solved'];
   const SCENE_TRANSITION_MS = 400; // 場景切換動畫時長
-  const KEYWORD_HINTS = [
-    'Teams通知', '28202', 'code', 'ELK', 'proxy',
-    'Postman', 'Google', 'ping', 'TLS', 'fix',
-    'HttpClientHandler', 'HttpWebRequest',
-  ];
+  // 已移至 clues.js 的 hintKeyword + references 驅動漸進式提示
 
   /* ─── 工具函式 ─── */
 
@@ -140,13 +136,53 @@
         });
       }
 
-      // 搜尋輸入框 Enter 鍵
+      // 搜尋輸入框
       var searchInput = $('search-input');
       if (searchInput) {
         searchInput.addEventListener('keydown', function (e) {
+          var dropdown = $('autocomplete-dropdown');
+          var items = dropdown ? dropdown.querySelectorAll('.ac-item') : [];
+          var active = dropdown ? dropdown.querySelector('.ac-item.active') : null;
+
           if (e.key === 'Enter') {
             e.preventDefault();
+            if (active) {
+              searchInput.value = active.dataset.keyword;
+              self.hideAutocomplete();
+            }
             self.handleSearch();
+          } else if (e.key === 'ArrowDown' && items.length > 0) {
+            e.preventDefault();
+            var nextItem;
+            if (!active) { nextItem = items[0]; }
+            else {
+              active.classList.remove('active');
+              nextItem = active.nextElementSibling || items[0];
+            }
+            nextItem.classList.add('active');
+            nextItem.scrollIntoView({ block: 'nearest' });
+          } else if (e.key === 'ArrowUp' && items.length > 0) {
+            e.preventDefault();
+            var prevItem;
+            if (!active) { prevItem = items[items.length - 1]; }
+            else {
+              active.classList.remove('active');
+              prevItem = active.previousElementSibling || items[items.length - 1];
+            }
+            prevItem.classList.add('active');
+            prevItem.scrollIntoView({ block: 'nearest' });
+          } else if (e.key === 'Escape') {
+            self.hideAutocomplete();
+          }
+        });
+        // 即時模糊搜尋下拉
+        searchInput.addEventListener('input', function () {
+          self.updateAutocomplete(searchInput.value);
+        });
+        // 點擊外部關閉
+        document.addEventListener('click', function (e) {
+          if (!e.target.closest('.search-input-wrapper')) {
+            self.hideAutocomplete();
           }
         });
       }
@@ -156,6 +192,15 @@
       if (restartBtn) {
         restartBtn.addEventListener('click', function () {
           self.restart();
+        });
+      }
+
+      // 調查歷史收合 toggle
+      var historyToggle = $('terminal-history-toggle');
+      if (historyToggle) {
+        historyToggle.addEventListener('click', function () {
+          var section = $('terminal-history-section');
+          if (section) section.classList.toggle('collapsed');
         });
       }
 
@@ -232,6 +277,7 @@
       // 記錄搜尋歷史
       this.addToTerminalHistory(keyword);
       input.value = '';
+      this.hideAutocomplete();
 
       // 搜尋動畫
       var terminalBody = $('terminal-body');
@@ -251,11 +297,21 @@
         return;
       }
 
-      var results = window.ClueEngine.searchClues(keyword);
+      var result = window.ClueEngine.searchClues(keyword);
 
-      if (results.length === 0) {
+      if (!result.clue) {
         // 未找到線索
-        this.addTerminalOutput('❌ 未找到相關線索，請嘗試其他關鍵字', 'error');
+        if (result.suggestion) {
+          this.addTerminalOutput('❌ 未找到「' + keyword + '」，你是不是要找：' + result.suggestion + '？', 'error');
+        } else {
+          this.addTerminalOutput('🤔 這條線索似乎不存在... 看看下方的調查方向吧！', 'error');
+          // pulse 高亮 hint chips 區域
+          var hintsArea = document.querySelector('.keyword-hints');
+          if (hintsArea) {
+            hintsArea.classList.add('hints-pulse');
+            setTimeout(function () { hintsArea.classList.remove('hints-pulse'); }, 1500);
+          }
+        }
         var terminal = document.querySelector('.terminal');
         if (terminal && window.Effects) {
           window.Effects.shake(terminal);
@@ -263,30 +319,26 @@
         return;
       }
 
-      // 區分新線索與已發現線索
-      var self = this;
-      var newClues = results.filter(function (c) { return !self.discoveredClues.has(c.id); });
-      var oldClues = results.filter(function (c) { return self.discoveredClues.has(c.id); });
+      var clue = result.clue;
 
-      if (oldClues.length > 0) {
-        var oldIds = oldClues.map(function (c) { return c.id; }).join(', ');
-        this.addTerminalOutput('ℹ️ ' + oldIds + ' 已經發現過了', 'info');
+      if (this.discoveredClues.has(clue.id)) {
+        this.addTerminalOutput('📎 ' + clue.id + ' 已經發現過了', 'info');
+        // 捲動到已存在的卡片
+        this.scrollToClue(clue.id);
+        return;
       }
 
-      if (newClues.length > 0) {
-        this.addTerminalOutput('✅ 發現 ' + newClues.length + ' 條新線索！', 'success');
+      this.addTerminalOutput('✅ 發現新線索：' + clue.title, 'success');
 
-        // 標記為已發現
-        newClues.forEach(function (c) { self.discoveredClues.add(c.id); });
+      // 標記為已發現
+      this.discoveredClues.add(clue.id);
+      this.updateFoundCount();
 
-        // 更新已發現數量
-        this.updateFoundCount();
+      // 顯示線索卡片
+      this.displayClues([clue]);
 
-        // 在中央面板顯示線索卡片
-        this.displayClues(newClues);
-      } else if (results.length > 0 && newClues.length === 0) {
-        this.addTerminalOutput('📎 這些線索都已經發現過了', 'info');
-      }
+      // 刷新提示（可能解鎖新關鍵字）
+      this.refreshKeywordHints();
     },
 
     /* =====================
@@ -305,6 +357,10 @@
         '<span class="terminal-prompt-mini">></span> ' +
         '<span class="terminal-keyword">' + escapeHtml(keyword) + '</span>';
       history.appendChild(entry);
+
+      // 更新歷史計數
+      var countEl = $('history-count');
+      if (countEl) countEl.textContent = '(' + this.searchHistory.length + ')';
 
       this.scrollTerminal();
     },
@@ -331,11 +387,56 @@
       }
     },
 
+    /** 更新自動補全下拉選單 */
+    updateAutocomplete: function (value) {
+      var dropdown = $('autocomplete-dropdown');
+      if (!dropdown || !window.ClueEngine) return;
+
+      if (!value || !value.trim()) {
+        this.hideAutocomplete();
+        return;
+      }
+
+      var results = window.ClueEngine.autocomplete(value.trim());
+      if (results.length === 0) {
+        this.hideAutocomplete();
+        return;
+      }
+
+      var self = this;
+      dropdown.innerHTML = '';
+      results.forEach(function (r) {
+        var item = document.createElement('div');
+        item.className = 'ac-item';
+        item.dataset.keyword = r.keyword;
+        item.innerHTML =
+          '<span class="ac-id">' + r.clueId + '</span>' +
+          '<span class="ac-title">' + r.title + '</span>';
+        item.addEventListener('click', function () {
+          var input = $('search-input');
+          if (input) input.value = r.keyword;
+          self.hideAutocomplete();
+          self.handleSearch();
+        });
+        dropdown.appendChild(item);
+      });
+      dropdown.classList.remove('hidden');
+    },
+
+    /** 隱藏自動補全下拉 */
+    hideAutocomplete: function () {
+      var dropdown = $('autocomplete-dropdown');
+      if (dropdown) {
+        dropdown.classList.add('hidden');
+        dropdown.innerHTML = '';
+      }
+    },
+
     /* =====================
      *  線索卡片渲染
      * ===================== */
 
-    /** 顯示多張線索卡片並觸發入場動畫 */
+    /** 顯示多張線索卡片並觸發入場動畫（新卡片插入頂部） */
     displayClues: function (clues) {
       var container = $('clue-display');
       if (!container) return;
@@ -343,20 +444,32 @@
       var noMsg = $('no-clue-msg');
       if (noMsg) noMsg.style.display = 'none';
 
+      // 收合所有現有卡片
+      container.querySelectorAll('.clue-card').forEach(function (card) {
+        card.classList.add('collapsed');
+      });
+
+      // 新線索插入頂部，最新的在最上面
+      var firstExisting = container.querySelector('.clue-card');
       clues.forEach(function (clue, index) {
         var card = App.createClueCard(clue);
-        container.appendChild(card);
+        // 插入到最頂部（在現有卡片之前）
+        if (firstExisting) {
+          container.insertBefore(card, firstExisting);
+        } else {
+          container.appendChild(card);
+        }
 
         // 錯開入場動畫
         if (window.Effects) {
           window.Effects.slideIn(card, index * 200);
         }
-
-        // 捲動至新卡片
-        setTimeout(function () {
-          card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        }, index * 200 + 300);
       });
+
+      // 捲動到頂部顯示最新線索
+      setTimeout(function () {
+        container.scrollTop = 0;
+      }, 300);
     },
 
     /** 建立單張線索卡片 DOM 元素 */
@@ -382,7 +495,9 @@
       html +=   '<span class="clue-id">' + escapeHtml(clue.id) + '</span>';
       html +=   '<span class="clue-title">' + escapeHtml(clue.title) + '</span>';
       html +=   '<span class="clue-badge badge-' + clue.type + '" style="background-color:' + typeInfo.color + '">' + escapeHtml(typeInfo.label) + '</span>';
+      html +=   '<span class="clue-collapse-toggle">▼</span>';
       html += '</div>';
+      html += '<div class="clue-card-body">';
       html += '<div class="clue-content">' + processedContent + '</div>';
 
       // 線索洞察
@@ -409,8 +524,19 @@
       html +=     isCollected ? '✅ 已收集' : '📌 收集此線索';
       html +=   '</button>';
       html += '</div>';
+      html += '</div>'; // close .clue-card-body
 
       card.innerHTML = html;
+
+      // 繫結收合 toggle（點擊 header 收合/展開）
+      var header = card.querySelector('.clue-card-header');
+      if (header) {
+        header.addEventListener('click', function (e) {
+          // 避免點擊 badge 等互動元素時觸發
+          if (e.target.closest('.clue-ref-tag')) return;
+          card.classList.toggle('collapsed');
+        });
+      }
 
       // 繫結收集按鈕
       var self = this;
@@ -445,6 +571,8 @@
     scrollToClue: function (clueId) {
       var card = $('card-' + clueId);
       if (card) {
+        // 展開收合的卡片
+        card.classList.remove('collapsed');
         card.scrollIntoView({ behavior: 'smooth', block: 'center' });
         if (window.Effects) {
           window.Effects.pulseGlow(card, '#00d4ff', 3);
@@ -485,28 +613,82 @@
         b.classList.add('collected');
         b.textContent = '✅ 已收集';
       });
+
+      // 收集後也刷新提示
+      this.refreshKeywordHints();
     },
 
     /* =====================
      *  關鍵字提示
      * ===================== */
 
-    populateKeywordHints: function () {
+    /**
+     * 漸進式關鍵字提示：根據已發現/收集的線索解鎖新提示
+     * 規則：線索的 references 為空 → 一開始就顯示
+     *       references 中任一線索已被發現 → 解鎖
+     */
+    refreshKeywordHints: function () {
       var container = $('keyword-hints-tags');
-      if (!container) return;
+      if (!container || !window.ClueEngine) return;
 
       var self = this;
-      KEYWORD_HINTS.forEach(function (hint) {
+      var clues = window.ClueEngine.CLUES;
+      container.innerHTML = '';
+
+      clues.forEach(function (clue) {
+        // 判斷是否該顯示這個提示
+        var unlocked = false;
+        if (!clue.references || clue.references.length === 0) {
+          unlocked = true;
+        } else {
+          unlocked = clue.references.some(function (refId) {
+            return self.discoveredClues.has(refId);
+          });
+        }
+        if (!unlocked) return;
+
+        var keyword = clue.hintKeyword;
+        var question = clue.hintQuestion || keyword;
+        if (!keyword) return;
+
+        var isFound = self.discoveredClues.has(clue.id);
+
         var chip = document.createElement('span');
-        chip.className = 'hint-chip';
-        chip.textContent = hint;
-        chip.addEventListener('click', function () {
-          var input = $('search-input');
-          if (input) input.value = hint;
-          self.handleSearch();
-        });
+
+        if (isFound) {
+          // 已發現：顯示完整文字 + found 樣式
+          chip.className = 'hint-chip hint-found';
+          chip.textContent = question;
+          chip.addEventListener('click', function () {
+            var input = $('search-input');
+            if (input) input.value = keyword;
+            self.handleSearch();
+          });
+        } else {
+          // 未發現：隱藏文字，點擊才顯示
+          chip.className = 'hint-chip hint-hidden';
+          chip.textContent = '🔒 ???';
+          chip.addEventListener('click', function () {
+            // 揭露提示文字
+            chip.classList.remove('hint-hidden');
+            chip.classList.add('hint-revealed');
+            chip.textContent = question;
+            // 再次點擊觸發搜尋
+            chip.onclick = function () {
+              var input = $('search-input');
+              if (input) input.value = keyword;
+              self.handleSearch();
+            };
+          });
+        }
+
         container.appendChild(chip);
       });
+    },
+
+    /** 初始化提示（向後相容） */
+    populateKeywordHints: function () {
+      this.refreshKeywordHints();
     },
 
     /* =====================
@@ -630,6 +812,11 @@
       if (terminalHistory) {
         terminalHistory.innerHTML = '';
       }
+      var countEl = $('history-count');
+      if (countEl) countEl.textContent = '(0)';
+      var historySection = $('terminal-history-section');
+      if (historySection) historySection.classList.add('collapsed');
+      this.hideAutocomplete();
 
       // 重置線索顯示區域
       var clueDisplay = $('clue-display');
@@ -644,6 +831,9 @@
 
       // 更新已發現數量
       this.updateFoundCount();
+
+      // 重置提示
+      this.refreshKeywordHints();
 
       // 回到首頁
       this.switchScene('landing');
